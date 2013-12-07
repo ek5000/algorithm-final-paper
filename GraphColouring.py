@@ -7,7 +7,9 @@ from networkx import *
 numberOfNodes = 50
 
 
-def read_graph_from_adjacent_matrix(lines, graph):
+def read_graph_from_adjacent_matrix(lines):
+    graph = nx.Graph()
+    graph.add_nodes_from(range(0, numberOfNodes), color=-1)
     index = 0
     for line in lines:
         values = line.strip().split(' ')
@@ -15,6 +17,7 @@ def read_graph_from_adjacent_matrix(lines, graph):
             if values[i] == '1':
                 graph.add_edge(index, i)
         index += 1
+    return graph
 
 def greedy_vertex_coloring(graph, list_of_nodes):
     colorsUsed = []
@@ -36,15 +39,18 @@ def greedy_vertex_coloring(graph, list_of_nodes):
 
     return colorsUsed
 
-def main():
-    graph = nx.Graph()
-    graph.add_nodes_from(range(0, numberOfNodes), color=-1)
-    read_graph_from_adjacent_matrix(fileinput.input(), graph)
+def order_nodes_by_degree(graph):
     nodes_with_degreess = list(graph.degree_iter())
     sorted_list_of_nodes = sorted(nodes_with_degreess, key=lambda node: -node[1])
     list_of_nodes = []
     for node_pair in sorted_list_of_nodes:
         list_of_nodes.append(node_pair[0])
+
+    return list_of_nodes
+
+def main():
+    graph = read_graph_from_adjacent_matrix(fileinput.input())
+    list_of_nodes = order_nodes_by_degree(graph)
 
     colorsUsed = greedy_vertex_coloring(graph, list_of_nodes)
 
