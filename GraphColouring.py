@@ -46,22 +46,7 @@ def main():
     for node_pair in sorted_list_of_nodes:
         list_of_nodes.append(node_pair[0])
 
-    colorsUsed = []
-    for i in range(0, numberOfNodes):
-        outer_node = list_of_nodes[i]
-        for j in range(0, i):
-            inner_node = list_of_nodes[j]
-            try:
-                edge = graph.edge[outer_node][inner_node]
-                if graph.node[outer_node]['color'] == graph.node[inner_node]['color']:  # edge existed, and was the same color
-                    graph.node[outer_node]['color'] = -1
-            except:  # No edge between the i and j, check if color should be assigned
-                if graph.node[outer_node]['color'] >= graph.node[inner_node]['color'] or graph.node[outer_node]['color'] == -1: # Either a possible lower color or  no color assigned
-                    graph.node[outer_node]['color'] = graph.node[inner_node]['color']
-        if graph.node[outer_node]['color'] == -1: ## Create a new color
-            newColor = len(colorsUsed)
-            graph.node[outer_node]['color'] = newColor
-            colorsUsed.append(newColor)
+    colorsUsed = greedy_vertex_coloring(graph, list_of_nodes)
 
     print(colorsUsed)
 
