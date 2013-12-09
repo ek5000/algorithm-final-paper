@@ -6,11 +6,12 @@ __author__ = 'ek'
 import networkx as nx
 from networkx import *
 
-numberOfNodes = 15
+numberOfNodes = 50
 
 def read_multiple_graphs_from_adjacency_matrices(lines):
     graphs = []
     graph = nx.Graph()
+    graphs.append(graph)
     graph.add_nodes_from(range(0, numberOfNodes), color=-1)
     index = 0
     for line in lines:
@@ -69,6 +70,8 @@ def check_validity_of_coloring(graph):
     return True
 
 def run_time_trials(graphs, method_to_order_by=lambda graph: order_nodes_by_degree(graph), outstream = sys.stdout):
+    avg_number_of_colors = 0
+    avg_time = 0
     for graph in graphs:
         start = time.time()
         list_of_nodes = method_to_order_by(graph)
@@ -76,8 +79,14 @@ def run_time_trials(graphs, method_to_order_by=lambda graph: order_nodes_by_degr
         elapsed = time.time() - start
         if check_validity_of_coloring(graph) is False:
             raise Exception("Color produced wasn't valid")
-        outstream.write("Graph coloring used : " + str(num_colors) + " : time " + str(elapsed) + "\n")
-
+        avg_number_of_colors += num_colors
+        avg_time += elapsed
+    ## normalize
+    avg_number_of_colors /= len(graphs)
+    avg_time /= len(graphs)
+    outstream.write("Avg. Number of Colors: " + str(avg_number_of_colors) + "\n")
+    outstream.write("Average Time Taken: " + str(avg_time) + "\n")
+    outstream.write("Maximum Clique Size: " + str(nx.graph_clique_number(graph)))
 
 
 def main():
