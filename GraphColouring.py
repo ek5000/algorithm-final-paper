@@ -8,6 +8,7 @@ from networkx import *
 
 numberOfNodes = 50
 
+
 def read_multiple_graphs_from_adjacency_matrices(lines):
     graphs = []
     graph = nx.Graph()
@@ -28,6 +29,7 @@ def read_multiple_graphs_from_adjacency_matrices(lines):
         index += 1
     return graphs
 
+
 def read_graph_from_adjacent_matrix(lines):
     graph = nx.Graph()
     graph.add_nodes_from(range(0, numberOfNodes), color=-1)
@@ -39,6 +41,7 @@ def read_graph_from_adjacent_matrix(lines):
                 graph.add_edge(index, i)
         index += 1
     return graph
+
 
 def greedy_vertex_coloring(graph, list_of_nodes):
     colorsUsed = []
@@ -52,6 +55,7 @@ def greedy_vertex_coloring(graph, list_of_nodes):
 
     return list(set(colorsUsed))
 
+
 def order_nodes_by_degree(graph):
     nodes_with_degreess = list(graph.degree_iter())
     sorted_list_of_nodes = sorted(nodes_with_degreess, key=lambda node: -node[1])
@@ -61,27 +65,33 @@ def order_nodes_by_degree(graph):
 
     return list_of_nodes
 
+
 def check_validity_of_coloring(graph):
     for node in graph.nodes():
         for neighbor in graph.neighbors(node):
             if graph.node[node]['color'] == graph.node[neighbor]['color']:
-                print("Node was " + str(node) + "-" + str(graph.node[node]['color']) + ": Neighbor was " + str(neighbor) + "-" + str(graph.node[neighbor]['color']) + "")
+                print("Node was " + str(node) + "-" + str(graph.node[node]['color']) + ": Neighbor was " + str(
+                    neighbor) + "-" + str(graph.node[neighbor]['color']) + "")
                 return False
     return True
 
-def run_time_trials(graphs, method_to_order_by=lambda graph: order_nodes_by_degree(graph), outstream = sys.stdout):
+
+def run_time_trials(graphs,
+                    method_to_order_by=lambda graph: order_nodes_by_degree(graph),
+                    method_to_get_color_list=lambda graph, list_of_nodes: greedy_vertex_coloring(graph, list_of_nodes),
+                    outstream=sys.stdout):
     avg_number_of_colors = 0
     avg_time = 0
     for graph in graphs:
         start = time.time()
         list_of_nodes = method_to_order_by(graph)
-        num_colors = len(greedy_vertex_coloring(graph, list_of_nodes))
+        num_colors = len(method_to_get_color_list(graph, list_of_nodes))
         elapsed = time.time() - start
         if check_validity_of_coloring(graph) is False:
             raise Exception("Color produced wasn't valid")
         avg_number_of_colors += num_colors
         avg_time += elapsed
-    ## normalize
+        ## normalize
     avg_number_of_colors /= len(graphs)
     avg_time /= len(graphs)
     outstream.write("Avg. Number of Colors: " + str(avg_number_of_colors) + "\n")
