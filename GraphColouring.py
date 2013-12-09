@@ -1,11 +1,31 @@
 import fileinput
+import timeit
+import time
 
 __author__ = 'ek'
 import networkx as nx
 from networkx import *
 
-numberOfNodes = 50
+numberOfNodes = 15
 
+def read_multiple_graphs_from_adjacency_matrices(lines):
+    graphs = []
+    graph = nx.Graph()
+    graph.add_nodes_from(range(0, numberOfNodes), color=-1)
+    index = 0
+    for line in lines:
+        if line == '-\n':
+            index = 0
+            graphs.append(graph)
+            graph = nx.Graph()
+            graph.add_nodes_from(range(0, numberOfNodes), color=-1)
+            continue
+        values = line.strip().split(' ')
+        for i in range(0, numberOfNodes):
+            if values[i] == '1':
+                graph.add_edge(index, i)
+        index += 1
+    return graphs
 
 def read_graph_from_adjacent_matrix(lines):
     graph = nx.Graph()
@@ -23,21 +43,13 @@ def greedy_vertex_coloring(graph, list_of_nodes):
     colorsUsed = []
     for i in range(0, numberOfNodes):
         outer_node = list_of_nodes[i]
-        for j in range(0, i):
-            inner_node = list_of_nodes[j]
-            try:
-                edge = graph.edge[outer_node][inner_node]
-                if graph.node[outer_node]['color'] == graph.node[inner_node]['color']:  # edge existed, and was the same color
-                    graph.node[outer_node]['color'] = -1
-            except:  # No edge between the i and j, check if color should be assigned
-                if graph.node[outer_node]['color'] >= graph.node[inner_node]['color'] or graph.node[outer_node]['color'] == -1: # Either a possible lower color or  no color assigned
-                    graph.node[outer_node]['color'] = graph.node[inner_node]['color']
-        if graph.node[outer_node]['color'] == -1: ## Create a new color
-            newColor = len(colorsUsed)
-            graph.node[outer_node]['color'] = newColor
-            colorsUsed.append(newColor)
+        visited_colors = [graph.node[x]['color'] for x in list_of_nodes[:i]]
+        neighboring_colors = [graph.node[x]['color'] for x in graph.neighbors(outer_node)]
+        possible_colors = list(set(visited_colors) - set(neighboring_colors))
+        graph.node[outer_node]['color'] = i if not possible_colors else possible_colors[0]
+        colorsUsed.append(i if not possible_colors else possible_colors[0])
 
-    return colorsUsed
+    return list(set(colorsUsed))
 
 def order_nodes_by_degree(graph):
     nodes_with_degreess = list(graph.degree_iter())
@@ -48,13 +60,36 @@ def order_nodes_by_degree(graph):
 
     return list_of_nodes
 
+def check_validity_of_coloring(graph):
+    for node in graph.nodes():
+        for neighbor in graph.neighbors(node):
+            if graph.node[node]['color'] == graph.node[neighbor]['color']:
+                print("Node was " + str(node) + "-" + str(graph.node[node]['color']) + ": Neighbor was " + str(neighbor) + "-" + str(graph.node[neighbor]['color']) + "")
+                return False
+    return True
+
+def run_time_trials(graphs, method_to_order_by=lambda graph: order_nodes_by_degree(graph), outstream = sys.stdout):
+    for graph in graphs:
+        start = time.time()
+        list_of_nodes = method_to_order_by(graph)
+        num_colors = len(greedy_vertex_coloring(graph, list_of_nodes))
+        elapsed = time.time() - start
+        if check_validity_of_coloring(graph) is False:
+            raise Exception("Color produced wasn't valid")
+        outstream.write("Graph coloring used : " + str(num_colors) + " : time " + str(elapsed) + "\n")
+
+
+
 def main():
-    graph = read_graph_from_adjacent_matrix(fileinput.input())
-    list_of_nodes = order_nodes_by_degree(graph)
+    # Run a single graph
+    # graph = read_graph_from_adjacent_matrix(fileinput.input())
+    # list_of_nodes = order_nodes_by_degree(graph)
+    # colorsUsed = greedy_vertex_coloring(graph, list_of_nodes)
+    # check_validity_of_coloring(graph)
 
-    colorsUsed = greedy_vertex_coloring(graph, list_of_nodes)
-
-    print(colorsUsed)
+    ## Run multiple grahs
+    graphs = read_multiple_graphs_from_adjacency_matrices(fileinput.input())
+    run_time_trials(graphs, order_nodes_by_degree)
 
 
 if __name__ == '__main__':
